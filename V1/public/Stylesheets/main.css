@@ -9,3 +9,7 @@
 .thumbnail .caption-full {
     padding: 9px;
 }
+
+.body {
+    background-image: url(background.jpg)
+}

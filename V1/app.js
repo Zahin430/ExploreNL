@@ -2,16 +2,30 @@ var express    = require("express"),
     app        = express(),
     bodyParser = require("body-parser"),
     mongoose   = require("mongoose"),
+    passport   = require("passport"),
+    localStrategy = require("passport-local"),
     Place      = require("./models/place"),
+    User       = require("./models/user"),
     seedDB     = require("./seeds");
 
 
 mongoose.connect("mongodb://localhost/visitNL", {useNewUrlParser: true});
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
-seedDB();
 app.use(express.static(__dirname + "/public"));
-console.log(__dirname);
+seedDB();
+
+// PASSPORT CONFIGURATION
+app.use(require("express-session")({
+    secret: "You are the best",
+    resave: false,
+    saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new localStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 // Place.create({    
 //     name: "Signal Hill", 
@@ -85,7 +99,7 @@ app.get("/places/:id", function(req,res){
 app.get("/places/:id/comments/new", function(req,res) {
     Place.findById(req.params.id, function(err, campground){
         if(err) {
-            console.log(err)
+            console.log(err);
         } else {
             res.render("comments/new", {campground: campground});
         }
@@ -93,6 +107,29 @@ app.get("/places/:id/comments/new", function(req,res) {
     });
     res.render("comments/new");
 });
+
+// ===========
+// AUTH ROUTES
+// ============
+
+app.get("/register", function(req,res){
+    res.render("register");
+});
+
+//handle sing up logic
+app.post("/register", function(req,res){
+   var newUser = new User({username: req.body.username});
+   User.register(newUser, req.body.password, function(err, user){
+       if(err) {
+           console.log(err);
+           return res.render("register")
+       }
+       passport.authenticate("local")(req, res, function(){
+            res.redirect("/places");
+       });
+   });
+});
+
 app.listen(4000, function(){
     console.log("Server started on port 4000 ");
 });
