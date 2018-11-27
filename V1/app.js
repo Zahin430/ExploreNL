@@ -10,6 +10,8 @@ mongoose.connect("mongodb://localhost/visitNL", {useNewUrlParser: true});
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 seedDB();
+app.use(express.static(__dirname + "/public"));
+console.log(__dirname);
 
 // Place.create({    
 //     name: "Signal Hill", 
